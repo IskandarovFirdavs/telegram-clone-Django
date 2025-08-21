@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{{ room_name }} Chat</title>
+    <style>
+        /* General Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Main Layout */
+        .page-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Left Sidebar for Members */
+        .members-sidebar {
+            width: 20%;
+            min-width: 200px;
+            background-color: #ffffff;
+            color: #333;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .members-sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #1a1d24;
+            font-weight: 600;
+        }
+
+        .member-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #4a4a4a;
+        }
+
+        /* Center Content Area */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            background-color: #ffffff;
+            max-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #2a2f3d;
+            font-weight: 600;
+        }
+
+        .chats-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: #aeb4c0 #f1f3f5;
+        }
+
+        .chats-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chats-container::-webkit-scrollbar-track {
+            background: #f1f3f5;
+        }
+        .chats-container::-webkit-scrollbar-thumb {
+            background: #aeb4c0;
+            border-radius: 4px;
+        }
+
+        .single-message {
+            max-width: 65%;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sent {
+            margin-left: auto;
+        }
+
+        .msg-body {
+            padding: 0.8rem 1.2rem;
+            border-radius: 18px;
+            font-size: 1rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .single-message:not(.sent) .msg-body {
+            background-color: #ff7300;
+            color: white;
+            border-bottom-left-radius: 6px;
+        }
+
+        .sent .msg-body {
+            background-color: #8c00ff;
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .sender {
+            margin-top: 0.2rem;
+            font-size: 0.75rem;
+            color: #888;
+            padding: 0 0.8rem;
+        }
+
+        form {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 50px;
+            max-height: 150px;
+            resize: none;
+            border: 1px solid #ccc;
+            padding: 0.8rem 1.2rem;
+            background-color: #f1f3f5;
+            border-radius: 24px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        textarea:focus {
+            background-color: #e5e7eb;
+            border-color: #8c00ff;
+            box-shadow: 0 0 0 3px rgba(140, 0, 255, 0.2);
+        }
+
+        button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background-color: #8c00ff;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        button:hover {
+            background-color: #7a00e0;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(140, 0, 255, 0.2);
+        }
+
+        /* Right Sidebar for Rooms (Footer) */
+        .rooms-sidebar {
+            width: 20%;
+            min-width: 200px;
+            max-width: 250px;
+            background-color: #1a1d24;
+            color: #fff;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .rooms-sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .rooms-sidebar a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .rooms-sidebar div {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background-color: #2a2f3d;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rooms-sidebar div:hover {
+            background-color: #3a3f4d;
+            transform: translateX(-8px);
+        }
+
+        .rooms-sidebar div span {
+            font-weight: 500;
+            font-size: 1rem;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-info {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 1rem;
+            border-top: 1px solid #3a3f4d;
+        }
+
+        .user-info a {
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-info a:hover {
+            background-color: #3a3f4d;
+        }
+
+        /* Mobile Media Queries */
+        @media (max-width: 768px) {
+            .page-container {
+                flex-direction: column;
+            }
+
+            .members-sidebar, .rooms-sidebar {
+                display: none;
+            }
+
+            .content {
+                padding: 1rem;
+                height: 100vh;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .single-message {
+                max-width: 85%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+          integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+</head>
+
+<body>
+<div class="page-container">
+    <div class="rooms-sidebar">
+        <h2>Rooms</h2>
+        {% for room in rooms %}
+        <div>
+            <span><a
+                    href="{% url 'room' room_name=room.room_name username=request.user %}">{{ room.room_name }}</a></span>
+        </div>
+        {% endfor %}
+        <div class="user-info">
+            <a href="{% url 'profile' %}">
+                <span>{{ request.user.username }}</span>
+            </a>
+            <a href="{% url 'login' %}">
+                <svg color="white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+
+    <div class="content">
+        <h1>
+            {{ room_name }} ({{ room_name.chat_type }} chat )
+        </h1>
+        <div class="chats-container" id="chats-container">
+            {% for message in messages %}
+            {% if message.sender.username == request.user.username %}
+            <div class="single-message sent">
+                <div class="msg-body">{{ message.message }}</div>
+                <p class="sender">Me</p>
+            </div>
+            {% else %}
+            <div class="single-message">
+                <div class="msg-body">{{ message.message }}</div>
+                <p class="sender">{{ message.sender }}</p>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <form action="" id="msg-form" method="post">
+            {% csrf_token %}
+            <textarea name="message" id="message" placeholder="Type your message..."></textarea>
+            <button type="submit">
+                <i style="font-size:20px" class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+
+    <div class="members-sidebar">
+        <h2>Members</h2>
+        {% for member in room_name.members.all %}
+        <div class="member-item">
+            <span>{{ member.username }}</span>
+        </div>
+        {% endfor %}
+        <div class="user-info">
+            <span>Add room </span>
+            <a href="{% url 'home' %}">
+               <i class="fa-solid fa-plus"></i>
+            </a>
+        </div>
+    </div>
+
+</div>
+<script>
+    const socket = new WebSocket(`ws://${window.location.host}/ws/messages/{{room_name}}/`);
+    const messageForm = document.getElementById("msg-form");
+    const messageInput = document.getElementById("message");
+    const chatsDiv = document.getElementById("chats-container");
+
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    function scrollToBottom() {
+        chatsDiv.scrollTop = chatsDiv.scrollHeight;
+    }
+
+    scrollToBottom();
+
+    messageForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (message) {
+            socket.send(JSON.stringify({
+                message: message,
+                room_name: "{{room_name}}",
+                sender: "{{user}}"
+            }));
+            messageInput.value = "";
+            messageInput.style.height = 'auto';
+        }
+    });
+
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            messageForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    socket.addEventListener("message", (e) => {
+        const data = JSON.parse(e.data).message;
+        const isCurrentUser = data.sender === "{{user}}";
+
+        chatsDiv.insertAdjacentHTML('beforeend', `
+            <div class="single-message ${isCurrentUser ? 'sent' : ''}">
+                <div class="msg-body">${data.message}</div>
+                <p class="sender">${isCurrentUser ? 'Me' : data.sender}</p>
+            </div>
+        `);
+
+        scrollToBottom();
+    });
+</script>
+</body>
+</html>

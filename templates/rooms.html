@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="page-container">
+    <div class="header">
+        {% for room in rooms %}
+        <div>
+            <span>
+                <a href="{% url 'room' room_name=room.room_name username=request.user %}">{{ room.room_name }}</a></span>
+        </div>
+        {% endfor %}
+        <div style="margin-top:100%;display:flex;align-items:center;justify-content:space-between;">
+            <span>{{ request.user.username }}
+            </span>
+            <a href="{% url 'login' %}">
+                <svg color="white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1=" 12" x2="9" y2="12"></line>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

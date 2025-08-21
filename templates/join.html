@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Document</title>
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        .page-container {
+          background-color: #b1b1b1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100vh;
+        }
+
+        .content {
+          width: 80%;
+          max-width: 400px;
+          padding: 2rem;
+          height: fit-content;
+          max-height: 80vh;
+          background-color: #eef0f2;
+          border-radius: 1rem;
+          box-shadow: 0px 0px 1rem 0px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+          text-align: center;
+          font-size: 2rem;
+          margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+          outline: none;
+          border: none;
+          padding: 0.5rem 1rem;
+          background-color: #dadee1;
+          border-radius: 2rem;
+          width: 100%;
+          text-align: center;
+        }
+
+        button {
+          margin-top: 1rem;
+          border: 0;
+          outline: 0;
+          padding: 0.5rem 2rem;
+          background-color: #1b1f24;
+          border-radius: 2rem;
+          color: #ffffff;
+        font-size: 1.10rem;
+          font-weight: bold;
+          transition: 0.25s ease;
+        }
+
+        button:hover {
+          background-color: #353a41;
+        }
+            .popup-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #e74c3c;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-family: sans-serif;
+        z-index: 1000;
+
+      }
+
+      form span{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      width:100%;
+
+      }
+
+    </style>
+</head>
+<body>
+{% if messages %}
+{% for message in messages %}
+<div class="popup-alert">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="page-container">
+    <div class="content">
+        <h1>Join chat</h1>
+        <form action="" method="post">
+            {% csrf_token %}
+            <input type="text" placeholder="Room Name" name="room_name" required><br>
+            <center>
+            <button type="submit">Enter Room</button>
+          </center>
+        </form>
+        <center>
+        <a href="{% url 'home' %}">
+            <button>Create</button>
+        </a>
+        </center>
+    </div>
+</div>
+
+</body>
+</html>
