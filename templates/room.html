@@ -1,3 +1,4 @@
+{% load my_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,10 +32,8 @@
             height: 100vh;
         }
 
-        /* Left Sidebar for Members */
         .members-sidebar {
-            width: 20%;
-            min-width: 200px;
+            width: 23%;
             background-color: #ffffff;
             color: #333;
             padding: 2rem 1rem;
@@ -61,7 +60,6 @@
             color: #4a4a4a;
         }
 
-        /* Center Content Area */
         .content {
             flex: 1;
             display: flex;
@@ -194,9 +192,7 @@
 
         /* Right Sidebar for Rooms (Footer) */
         .rooms-sidebar {
-            width: 20%;
-            min-width: 200px;
-            max-width: 250px;
+            width: 22%;
             background-color: #1a1d24;
             color: #fff;
             padding: 2rem 1rem;
@@ -291,17 +287,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
           integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
-
 </head>
-
 <body>
 <div class="page-container">
     <div class="rooms-sidebar">
+        <form method="GET" class="search-container">
+            <div style="background:none;" class="search-header">
+                <div class="search-bar">
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input style="background:none;border:none;" type="text" name="q" placeholder="Search users"
+                           class="search-input" id="search-input"
+                           autocomplete="off">
+                    <button type="submit" class="clear-search" id="clear-search" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% for member in members %}
+        <span>
+        <a href="{% url 'profile-another' username=member.username %}">
+            <h1>{{ member.username }}</h1>
+        </a>
+    </span>
+        {% empty %}
+        {% endfor %}
+
         <h2>Rooms</h2>
         {% for room in rooms %}
         <div>
-            <span><a
-                    href="{% url 'room' room_name=room.room_name username=request.user %}">{{ room.room_name }}</a></span>
+            <span>
+                <a href="{% url 'room' room_name=room.room_name username=request.user %}">
+                    <p>{{ room.room_name|split_after_second_underscore:request }}</p>
+                    <span>
+                        <small style="font-weight:700">
+                            {% if room.messages.last.sender == request.user %}
+                             Me
+                            {% else %}
+                            {{ room.messages.last.sender.username }}
+                            {% endif %}
+                        </small>
+                        <small style="font-weight:100">: {{ room.messages.last.message }}</small>
+                    </span>
+                </a>
+            </span>
         </div>
         {% endfor %}
         <div class="user-info">
@@ -349,16 +387,41 @@
     </div>
 
     <div class="members-sidebar">
+        {% if room_name.chat_type == 'private' %}
+        {% for member in other_members %}
+        <div style="font-family: 'Poppins', sans-serif;background: #f8f9fa;display: flex;justify-content: center;align-items: start;height: 100vh;">
+            <div style="background: #ffffff;padding: 25px 35px;border-radius: 15px;box-shadow: 0 6px 18px rgba(0,0,0,0.08);text-align: center;max-width: 350px;width: 100%;transition: transform 0.3s ease;"
+                 onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
+                <h1 style="font-size: 4rem;color: #6c63ff;margin-bottom: 15px;font-weight: bold;">
+                    {% if member.first_name and member.last_name %}
+                    <em>{{ member.first_name|upper|first }}{{ member.last_name|upper|first }}</em>
+                    {% else %}
+                    <em>{{ member.username|upper|first }}</em>
+                    {% endif %}
+                </h1>
+                <div style="display: flex;flex-direction: column;gap: 10px;font-size: 1rem;color: #333;">
+                    <span><strong style="color:#6c63ff;">Username:</strong> {{ member.username }}</span>
+                    <span><strong style="color:#6c63ff;">Fullname:</strong> {{ member.first_name|default:None }} {{ member.last_name }}</span>
+                    <span><strong style="color:#6c63ff;">Email:</strong> {{ member.email }}</span>
+                    <span><strong style="color:#6c63ff;">Joined:</strong> {{ member.date_joined }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+        {% else %}
         <h2>Members</h2>
         {% for member in room_name.members.all %}
         <div class="member-item">
             <span>{{ member.username }}</span>
         </div>
         {% endfor %}
+
+        {% endif %}
         <div class="user-info">
             <span>Add room </span>
             <a href="{% url 'home' %}">
-               <i class="fa-solid fa-plus"></i>
+                <i class="fa-solid fa-plus"></i>
             </a>
         </div>
     </div>

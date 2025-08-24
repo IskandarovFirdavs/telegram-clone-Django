@@ -1,5 +1,6 @@
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from chat.forms import RegistrationForm, LoginForm
@@ -41,33 +42,105 @@ def join(request):
 
 
 
+# @login_required(login_url='login')
+# def room(request, room_name, username):
+#     existing_room = Room.objects.get(room_name__icontains=room_name, members__username=username)
+#     get_messages = Message.objects.filter(room=existing_room)
+#     rooms = request.user.chats.all()
+#     other_members = existing_room.members.exclude(id=request.user.id)
+#
+#
+#
+#     q = request.GET.get("q")
+#     if q:
+#         qs = UserModel.objects.filter(username__icontains=q)
+#     else:
+#         qs = UserModel.objects.none()
+#
+#     context = {
+#         'rooms': rooms,
+#         'messages': get_messages,
+#         'username': request.user,
+#         "room_name": existing_room,
+#         'members': qs,
+#         'other_members': other_members,
+#     }
+#     return render(request, 'room.html', context)
+#
+#
+# @login_required
+# def another_user_profile_view(request, username):
+#     user = get_object_or_404(UserModel, username=username)
+#     users = UserModel.objects.exclude(id=request.user.id).order_by('username')
+#
+#     q = request.GET.get('q')
+#
+#     if q:
+#         users = users.filter(username__icontains=q)
+#
+#
+#     room = (
+#         Room.objects.filter(members=user, chat_type='private')
+#         .filter(members=request.user)
+#         .annotate(num_members=Count("members"))
+#         .filter(num_members=2)
+#         .first()
+#     )
+#
+#     if not room:
+#         room = Room.objects.create(
+#             room_name=f"private_{request.user.username}_{user.username}",
+#             chat_type='private'
+#         )
+#         room.members.add(request.user, user)
+#
+#     return redirect('room', room_name=room.room_name, username=request.user.username)
+
 @login_required(login_url='login')
 def room(request, room_name, username):
-    existing_room = Room.objects.get(room_name=room_name)
+    existing_room = get_object_or_404(Room, room_name=room_name)
+
     get_messages = Message.objects.filter(room=existing_room)
     rooms = request.user.chats.all()
-
-    try:
-        existing = Room.objects.get(room_name=existing_room)
-        existing.members.add(request.user)
-        existing.save()
-    except Room.DoesNotExist:
-        u = Room.objects.create(room_name=room_name, members=request.user)
-
+    other_members = existing_room.members.exclude(id=request.user.id)
+    q = request.GET.get("q")
+    qs = UserModel.objects.filter(username__icontains=q) if q else UserModel.objects.none()
 
     context = {
         'rooms': rooms,
         'messages': get_messages,
         'username': request.user,
-        "room_name": existing_room
+        "room_name": existing_room,
+        'members': qs,
+        'other_members': other_members,
     }
     return render(request, 'room.html', context)
 
 
-def rooms_list(request):
-    rooms = Room.objects.order_by('room_name')
+@login_required
+def another_user_profile_view(request, username):
+    user = get_object_or_404(UserModel, username=username)
+    users = UserModel.objects.exclude(id=request.user.id).order_by('username')
 
-    return render(request, 'some_html.html', {'rooms': rooms})
+    q = request.GET.get('q')
+    if q:
+        users = users.filter(username__icontains=q)
+
+    # Generate the same room_name for both users (order-independent)
+    room_name = f"private_{'_'.join(sorted([request.user.username, user.username]))}"
+
+    # Try to get existing room
+    room = Room.objects.filter(room_name=room_name, chat_type='private').first()
+
+    # If not found → create it
+    if not room:
+        room = Room.objects.create(
+            room_name=room_name,
+            chat_type='private'
+        )
+        room.members.add(request.user, user)
+
+    return redirect('room', room_name=room.room_name, username=request.user.username)
 
 
 def register_view(request):
@@ -114,7 +187,26 @@ def profile_view(request):
 
     context = {
         'user': user,
-        'rooms': rooms
+        'rooms': rooms,
+
     }
 
     return render(request, 'profile.html', context)
+
+
+@login_required
+def chats_list(request):
+    rooms = request.user.chats.order_by('-room_name')
+    users = UserModel.objects.exclude(id=request.user.id).order_by('username')
+    q = request.GET.get("q")
+
+    if q:
+        users = users.filter(username__icontains=q)
+
+
+    context = {
+        'rooms': rooms,
+        'users': users,
+    }
+
+    return render(request, 'chats.html', context)

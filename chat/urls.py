@@ -3,6 +3,8 @@ from chat import views
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('home/', views.chats_list, name='chats'),
+    path('another_profile/<str:username>/', views.another_user_profile_view, name='profile-another'),
     path('join/', views.join, name='join'),
     path('<str:room_name>/<str:username>/', views.room, name='room'),
     path('register/', views.register_view, name='register'),

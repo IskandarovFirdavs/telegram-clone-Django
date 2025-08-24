@@ -11,7 +11,7 @@ class Room(models.Model):
         ('private', 'Private'),
         ('public', 'Public'),
     ]
-    room_name = models.CharField(max_length=100)
+    room_name = models.CharField(max_length=100, unique=True)
     members = models.ManyToManyField(UserModel, related_name='chats')
     chat_type = models.CharField(max_length=10, choices=CHAT_TYPE_CHOICES, default='public')
 
@@ -30,6 +30,8 @@ class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='messages')
     message = models.CharField(max_length=255)
     sender = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.sender} -> {self.room.room_name}'
