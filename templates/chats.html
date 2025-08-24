@@ -1,295 +1,249 @@
+{% load my_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{{ room_name }} Chat</title>
+    <title>Chats</title>
     <style>
-        /* General Reset and Base Styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        }
-
-        html {
-            scroll-behavior: smooth;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: #f0f2f5;
-            color: #333;
-            font-size: 16px;
-            line-height: 1.5;
+            background-color: #1a1b26;
+            color: #a9b1d6;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        /* Main Layout */
         .page-container {
             display: flex;
-            width: 100%;
             height: 100vh;
         }
 
-        /* Left Sidebar for Members */
-        .members-sidebar {
-            width: 20%;
-            min-width: 200px;
-            background-color: #ffffff;
-            color: #333;
-            padding: 2rem 1rem;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-            border-right: 1px solid #e0e0e0;
-        }
-
-        .members-sidebar h2 {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            color: #1a1d24;
-            font-weight: 600;
-        }
-
-        .member-item {
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            font-weight: 500;
-            color: #4a4a4a;
-        }
-
-        /* Center Content Area */
-        .content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 2rem;
-            background-color: #ffffff;
-            max-height: 100vh;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            color: #2a2f3d;
-            font-weight: 600;
-        }
-
-        .chats-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            scrollbar-width: thin;
-            scrollbar-color: #aeb4c0 #f1f3f5;
-        }
-
-        .chats-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        .chats-container::-webkit-scrollbar-track {
-            background: #f1f3f5;
-        }
-        .chats-container::-webkit-scrollbar-thumb {
-            background: #aeb4c0;
-            border-radius: 4px;
-        }
-
-        .single-message {
-            max-width: 65%;
-            margin-bottom: 1rem;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .sent {
-            margin-left: auto;
-        }
-
-        .msg-body {
-            padding: 0.8rem 1.2rem;
-            border-radius: 18px;
-            font-size: 1rem;
-            line-height: 1.4;
-            word-wrap: break-word;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .single-message:not(.sent) .msg-body {
-            background-color: #ff7300;
-            color: white;
-            border-bottom-left-radius: 6px;
-        }
-
-        .sent .msg-body {
-            background-color: #8c00ff;
-            color: white;
-            border-bottom-right-radius: 6px;
-        }
-
-        .sender {
-            margin-top: 0.2rem;
-            font-size: 0.75rem;
-            color: #888;
-            padding: 0 0.8rem;
-        }
-
-        form {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-        }
-
-        textarea {
-            flex: 1;
-            min-height: 50px;
-            max-height: 150px;
-            resize: none;
-            border: 1px solid #ccc;
-            padding: 0.8rem 1.2rem;
-            background-color: #f1f3f5;
-            border-radius: 24px;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        textarea:focus {
-            background-color: #e5e7eb;
-            border-color: #8c00ff;
-            box-shadow: 0 0 0 3px rgba(140, 0, 255, 0.2);
-        }
-
-        button {
-            width: 48px;
-            height: 48px;
-            border: none;
-            background-color: #8c00ff;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        button:hover {
-            background-color: #7a00e0;
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(140, 0, 255, 0.2);
-        }
-
-        /* Right Sidebar for Rooms (Footer) */
+        /* Left Sidebar - Rooms */
         .rooms-sidebar {
-            width: 33%;
-            min-width: 200px;
-            max-width: 450px;
-            background-color: #1a1d24;
-            color: #fff;
-            padding: 2rem 1rem;
+            width: 380px;
+            background-color: #16161e;
+            border-right: 1px solid #2a2f3d;
+            padding: 24px 20px;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .search-container {
+            margin-bottom: 24px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #2a2f3d;
+            border-radius: 12px;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar:focus-within {
+            background-color: #3a3f4d;
+            box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.4);
+        }
+
+        .search-icon {
+            color: #565f89;
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #c0caf5;
+            font-size: 15px;
+            outline: none;
+            width: 100%;
+        }
+
+        .search-input::placeholder {
+            color: #565f89;
         }
 
         .rooms-sidebar h2 {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            color: #c0caf5;
+            margin: 24px 0 16px;
+            padding-left: 4px;
+        }
+
+        .room-item {
+            background-color: #2a2f3d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .room-item:hover {
+            background-color: #3a3f4d;
+            border-color: #7aa2f7;
+            transform: translateX(4px);
+        }
+
+        .room-item a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .room-item p {
+            color: #c0caf5;
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .room-item small {
+            display: block;
+            color: #a9b1d6;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .room-item small[style*="font-weight:700"] {
+            color: #7aa2f7;
             font-weight: 600;
         }
 
-        .rooms-sidebar a {
-            text-decoration: none;
-            color: inherit;
+        .room-item small[style*="font-weight:100"] {
+            color: #a9b1d6;
+            opacity: 0.8;
         }
 
-        .rooms-sidebar div {
-            padding: 1rem;
-            margin-bottom: 0.75rem;
+        .user-item {
             background-color: #2a2f3d;
             border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
         }
 
-        .rooms-sidebar div:hover {
+        .user-item:hover {
             background-color: #3a3f4d;
-            transform: translateX(-8px);
+            transform: translateX(4px);
         }
 
-        .rooms-sidebar div span {
-            font-weight: 500;
-            font-size: 1rem;
-            color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .user-item a {
+            text-decoration: none;
+            color: #c0caf5;
+            font-weight: 600;
+            font-size: 15px;
+            display: block;
         }
 
+        .user-item a:hover {
+            color: #7aa2f7;
+        }
+
+        /* User Info */
         .user-info {
             margin-top: auto;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding-top: 1rem;
-            border-top: 1px solid #3a3f4d;
+            align-items: center;
+            padding: 20px 0;
+            border-top: 1px solid #2a2f3d;
         }
 
         .user-info a {
-            padding: 0.5rem;
-            border-radius: 50%;
-            transition: background-color 0.2s ease;
+            color: #7aa2f7;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .user-info a:hover {
-            background-color: #3a3f4d;
+            color: #9ece6a;
         }
 
+        .user-info svg {
+            transition: transform 0.2s ease;
+            width: 20px;
+            height: 20px;
+        }
+
+        .user-info a:hover svg {
+            transform: translateX(2px);
+        }
+
+        /* Right Content Area */
         .right {
-            width: 100%;
-            height: 100vh; /* take full height like Telegram does */
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #ffffff; /* background like chat area */
+            background: linear-gradient(135deg, #1a1b26 0%, #16161e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .right::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237aa2f7' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
         }
 
         .choose-one {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 12px 20px;
+            padding: 20px 32px;
+            background: rgba(26, 27, 38, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(122, 162, 247, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            animation: fadeInUp 0.6s ease;
+        }
 
-            font-size: 15px;
-            font-weight: 500;
-            color: rgba(0, 0, 0, 0.6);
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 14px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08); /* very soft shadow */
+        .choose-one p {
+            font-size: 18px;
+            font-weight: 600;
+            color: #7aa2f7;
+            text-align: center;
+            margin: 0;
+            text-shadow: 0 2px 8px rgba(122, 162, 247, 0.3);
         }
 
         /* Mobile Media Queries */
@@ -298,111 +252,109 @@
                 flex-direction: column;
             }
 
-            .members-sidebar, .rooms-sidebar {
+            .rooms-sidebar {
+                width: 100%;
+                height: auto;
                 display: none;
             }
 
-            .content {
-                padding: 1rem;
+            .right {
                 height: 100vh;
             }
 
-            h1 {
-                font-size: 1.5rem;
-                margin-bottom: 1rem;
+            .choose-one {
+                padding: 16px 24px;
+                border-radius: 16px;
             }
 
-            .single-message {
-                max-width: 85%;
+            .choose-one p {
+                font-size: 16px;
             }
         }
 
+        /* Scrollbar Styling */
+        .rooms-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .rooms-sidebar::-webkit-scrollbar-track {
+            background: #16161e;
+        }
+
+        .rooms-sidebar::-webkit-scrollbar-thumb {
+            background: #2a2f3d;
+            border-radius: 3px;
+        }
+
+        .rooms-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #3a3f4d;
+        }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
-          integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"/>
 </head>
-
 <body>
 <div class="page-container">
     <div class="rooms-sidebar">
         <form method="GET" class="search-container">
-            <div style="background:none;" class="search-header">
-                <div class="search-bar">
-                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor"
-                         stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" name="q" placeholder="Search users" class="search-input" id="search-input"
-                           autocomplete="off">
-                    <button type="submit" class="clear-search" id="clear-search" style="display: none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </button>
-                </div>
+            <div class="search-bar">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" name="q" placeholder="Search users" class="search-input" id="search-input" autocomplete="off">
             </div>
         </form>
-        {% for member in members %}
-        <span>
-            <a href="{% url 'profile-another' username=member.username %}">
-            <h1>{{ member.username }}</h1>
-        </a>
-        </span>
-        {% endfor %}
 
         {% if request.GET.q %}
         <h2>Users</h2>
-
         {% for user in users %}
-        <div>
-            <span>
-                <a href="{% url 'profile-another' username=user.username %}">
-                    {{ user.username }}
-                </a>
-            </span>
+        <div class="user-item">
+            <a href="{% url 'profile-another' username=user.username %}">
+                {{ user.username }}
+            </a>
         </div>
         {% endfor %}
-
         {% else %}
         <h2>Rooms</h2>
         {% for room in rooms %}
-
-        <div>
-            <span>
-                <a href="{% url 'room' room_name=room.room_name username=request.user %}">
-                    {{ room.room_name }}
-                </a>
-            </span>
+        <div class="room-item">
+            <a href="{% url 'room' room_name=room.room_name username=request.user %}">
+                <p>{{ room.room_name|split_after_second_underscore:request }}</p>
+                <span>
+                    <small style="font-weight:700">
+                        {% if room.messages.last.sender == request.user %}
+                            Me
+                        {% else %}
+                            {{ room.messages.last.sender.username }}
+                        {% endif %}
+                        : {{ room.messages.last.message }}
+                    </small>
+                </span>
+            </a>
         </div>
         {% endfor %}
         {% endif %}
+
         <div class="user-info">
             <a href="{% url 'profile' %}">
+                <i class="fa-solid fa-user"></i>
                 <span>{{ request.user.username }}</span>
             </a>
             <a href="{% url 'login' %}">
-                <svg color="white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
                 </svg>
             </a>
         </div>
     </div>
+
     <div class="right">
         <div class="choose-one">
-            <p>Choose any chat</p>
+            <p>Choose any chat to start messaging</p>
         </div>
     </div>
 </div>
-
-
 </body>
 </html>

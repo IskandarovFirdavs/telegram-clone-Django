@@ -1,4 +1,7 @@
+import django_filters
 from django import template
+
+from chat.models import Room
 
 register = template.Library()
 
@@ -11,3 +14,9 @@ def split_after_second_underscore(room_name, request):
         else:
             return parts[2]
     return room_name
+
+
+class ProductFilter(django_filters.FilterSet):
+    class Meta:
+        model = Room
+        fields = ['chat_type']

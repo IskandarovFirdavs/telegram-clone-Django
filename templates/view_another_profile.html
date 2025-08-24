@@ -146,7 +146,13 @@
 <div class="container">
     <div class="profile-card">
         <div class="profile-header">
-            <h1 class="profile-name">{{ user.first_name }} {{ user.last_name }}</h1>
+            <h1 class="profile-name">
+                {% if user.first_name and last_name %}
+                {{ user.first_name }} {{ user.last_name }}
+                {% else %}
+                {{ user.username }}
+                {% endif %}
+            </h1>
         </div>
 
         <div class="profile-body">

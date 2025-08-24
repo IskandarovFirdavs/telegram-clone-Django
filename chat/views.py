@@ -1,10 +1,11 @@
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from chat.forms import RegistrationForm, LoginForm
 from chat.models import Room, Message, UserModel
+from chat.templatetags.my_tags import ProductFilter
 
 
 @login_required(login_url='login')
@@ -99,20 +100,32 @@ def join(request):
 @login_required(login_url='login')
 def room(request, room_name, username):
     existing_room = get_object_or_404(Room, room_name=room_name)
-
     get_messages = Message.objects.filter(room=existing_room)
     rooms = request.user.chats.all()
     other_members = existing_room.members.exclude(id=request.user.id)
     q = request.GET.get("q")
     qs = UserModel.objects.filter(username__icontains=q) if q else UserModel.objects.none()
 
+    queryset = request.user.chats.all()
+    room_filter = ProductFilter(request.GET, queryset=queryset)
+    filtered_queryset = room_filter.qs
+
+    all_chats = request.user.chats.order_by('-pk')
+
+    paginator = Paginator(all_chats, 1)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
         'rooms': rooms,
+        'page_obj': page_obj,
         'messages': get_messages,
         'username': request.user,
         "room_name": existing_room,
         'members': qs,
         'other_members': other_members,
+        'filter': room_filter,
+        'filtered_queryset': filtered_queryset,
     }
     return render(request, 'room.html', context)
 
@@ -210,3 +223,14 @@ def chats_list(request):
     }
 
     return render(request, 'chats.html', context)
+
+
+
+def another_profile(request, pk):
+    user = UserModel.objects.get(pk=pk)
+    qs = UserModel.objects.exclude(pk=request.user.pk).order_by('username')
+
+    return render(request, 'view_another_profile.html', {
+        'user': user,
+        'users': qs
+    })
