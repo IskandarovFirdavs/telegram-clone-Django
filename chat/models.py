@@ -30,7 +30,7 @@ class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='messages')
     message = models.CharField(max_length=255)
     sender = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-
+    img = models.ImageField(upload_to='chat/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

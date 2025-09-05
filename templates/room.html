@@ -659,10 +659,14 @@
         </h1>
         <div class="chats-container" id="chats-container">
             {% for message in messages %}
-            {% if message.sender.username == request.user.username %}
+            {% if message.sender == request.user %}
             <div class="single-message sent">
                 <div class="msg-body">{{ message.message }}</div>
-                <p class="sender">Me</p>
+                <p class="sender">
+                    Me
+                    • <a href="{% url 'edit_message' message.id %}" style="color:yellow;">Edit</a>
+                    • <a href="{% url 'delete_message' message.id %}" style="color:red;">Delete</a>
+                </p>
             </div>
             {% else %}
             <div class="single-message">
@@ -670,15 +674,22 @@
                 <p class="sender">{{ message.sender }}</p>
             </div>
             {% endif %}
+            {% empty %}
+            <p>No messages yet.</p>
             {% endfor %}
         </div>
-        <form action="" id="msg-form" method="post" class="msg-form">
-            {% csrf_token %}
-            <textarea name="message" id="message" placeholder="Type your message..."></textarea>
-            <button type="submit">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </form>
+
+        <form action="{% url 'room' room_name=room_name username=request.user.username %}"
+      id="msg-form" method="post" class="msg-form">
+    {% csrf_token %}
+    <textarea name="message" id="message" placeholder="Type your message..." required></textarea>
+    <button type="submit">
+        <i class="fa-solid fa-paper-plane"></i>
+    </button>
+</form>
+
+
+
     </div>
 
     <div class="members-sidebar">

@@ -6,6 +6,7 @@ from django.contrib import messages
 from chat.forms import RegistrationForm, LoginForm
 from chat.models import Room, Message, UserModel
 from chat.templatetags.my_tags import ProductFilter
+from django.http import HttpResponseForbidden
 
 
 @login_required(login_url='login')
@@ -121,7 +122,7 @@ def room(request, room_name, username):
         'page_obj': page_obj,
         'messages': get_messages,
         'username': request.user,
-        "room_name": existing_room,
+        "room_name": existing_room.room_name,
         'members': qs,
         'other_members': other_members,
         'filter': room_filter,
@@ -234,3 +235,38 @@ def another_profile(request, pk):
         'user': user,
         'users': qs
     })
+
+
+@login_required
+def edit_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+
+    if message.sender != request.user:
+        return HttpResponseForbidden("You are not allowed to edit this message.")
+
+    if request.method == "POST":
+        new_text = request.POST.get("message")
+        if new_text:
+            message.message = new_text
+            message.save()
+            messages.success(request, "Message updated successfully!")
+            return redirect("room", room_name=message.room.room_name, username=request.user.username)
+
+    return render(request, "edit_message.html", {"message": message})
+
+
+@login_required
+def delete_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+
+    if message.sender != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this message.")
+
+    if request.method == "POST":
+        room_name = message.room.room_name
+        message.delete()
+        messages.success(request, "Message deleted successfully!")
+        return redirect("room", room_name=room_name, username=request.user.username)
+
+    return render(request, "confirm_delete.html", {"message": message})
+
