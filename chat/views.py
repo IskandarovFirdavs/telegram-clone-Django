@@ -4,7 +4,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from chat.forms import RegistrationForm, LoginForm
-from chat.models import Room, Message, UserModel
+from chat.models import Room, Message, UserModel, Notification
 from chat.templatetags.my_tags import ProductFilter
 from django.http import HttpResponseForbidden
 
@@ -42,62 +42,6 @@ def join(request):
             return redirect('join')
     return render(request, 'join.html')
 
-
-
-# @login_required(login_url='login')
-# def room(request, room_name, username):
-#     existing_room = Room.objects.get(room_name__icontains=room_name, members__username=username)
-#     get_messages = Message.objects.filter(room=existing_room)
-#     rooms = request.user.chats.all()
-#     other_members = existing_room.members.exclude(id=request.user.id)
-#
-#
-#
-#     q = request.GET.get("q")
-#     if q:
-#         qs = UserModel.objects.filter(username__icontains=q)
-#     else:
-#         qs = UserModel.objects.none()
-#
-#     context = {
-#         'rooms': rooms,
-#         'messages': get_messages,
-#         'username': request.user,
-#         "room_name": existing_room,
-#         'members': qs,
-#         'other_members': other_members,
-#     }
-#     return render(request, 'room.html', context)
-#
-#
-# @login_required
-# def another_user_profile_view(request, username):
-#     user = get_object_or_404(UserModel, username=username)
-#     users = UserModel.objects.exclude(id=request.user.id).order_by('username')
-#
-#     q = request.GET.get('q')
-#
-#     if q:
-#         users = users.filter(username__icontains=q)
-#
-#
-#     room = (
-#         Room.objects.filter(members=user, chat_type='private')
-#         .filter(members=request.user)
-#         .annotate(num_members=Count("members"))
-#         .filter(num_members=2)
-#         .first()
-#     )
-#
-#     if not room:
-#         room = Room.objects.create(
-#             room_name=f"private_{request.user.username}_{user.username}",
-#             chat_type='private'
-#         )
-#         room.members.add(request.user, user)
-#
-#     return redirect('room', room_name=room.room_name, username=request.user.username)
-
 @login_required(login_url='login')
 def room(request, room_name, username):
     existing_room = get_object_or_404(Room, room_name=room_name)
@@ -117,6 +61,13 @@ def room(request, room_name, username):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    Notification.objects.filter(
+        owner=request.user,
+        message__room=existing_room,
+        is_read=False
+    ).update(is_read=True)
+
+
     context = {
         'rooms': rooms,
         'page_obj': page_obj,
@@ -129,6 +80,7 @@ def room(request, room_name, username):
         'filtered_queryset': filtered_queryset,
     }
     return render(request, 'room.html', context)
+
 
 
 @login_required
@@ -208,22 +160,38 @@ def profile_view(request):
     return render(request, 'profile.html', context)
 
 
-@login_required
+@login_required(login_url='login')
 def chats_list(request):
+    qs = UserModel.objects.exclude(id=request.user.id).order_by('username')
+
     rooms = request.user.chats.order_by('-room_name')
+
+    rooms_with_notifications = []
+    for room in rooms:
+        has_unread = Notification.objects.filter(
+            owner=request.user,
+            message__room=room,
+            is_read=False
+        ).exists()
+        rooms_with_notifications.append((room, has_unread))
+
     users = UserModel.objects.exclude(id=request.user.id).order_by('username')
     q = request.GET.get("q")
 
     if q:
         users = users.filter(username__icontains=q)
 
+    unread_count = Notification.objects.filter(owner=request.user, is_read=False).count()
 
     context = {
-        'rooms': rooms,
+        'rooms_with_notifications': rooms_with_notifications,
         'users': users,
+        'unread_notifications': unread_count,
+        'qs': qs,
     }
 
     return render(request, 'chats.html', context)
+
 
 
 
@@ -269,4 +237,5 @@ def delete_message(request, message_id):
         return redirect("room", room_name=room_name, username=request.user.username)
 
     return render(request, "confirm_delete.html", {"message": message})
+
 

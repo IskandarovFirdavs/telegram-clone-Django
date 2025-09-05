@@ -7,7 +7,11 @@ SECRET_KEY = 'django-insecure-vdm=oka$%871f5(z1^!tuzhj^b#b*$xliuuixq5^w3_k4!qd@_
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app'
+]
 
 INSTALLED_APPS = [
     'daphne',

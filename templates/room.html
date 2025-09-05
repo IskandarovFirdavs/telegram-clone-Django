@@ -21,6 +21,25 @@
             overflow: hidden;
         }
 
+        #img {
+            display: none;
+        }
+        .label-btn {
+            display: inline-block;
+            background-color: #2AABEE; /* Telegram blue */
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out;
+        }
+
+        .label-btn:hover {
+            background-color: #229ED9;
+        }
+
         .page-container {
             display: flex;
             height: 100vh;
@@ -658,36 +677,50 @@
             {{ room_name }} ({{ room_name.chat_type }} chat)
         </h1>
         <div class="chats-container" id="chats-container">
-            {% for message in messages %}
-            {% if message.sender == request.user %}
-            <div class="single-message sent">
-                <div class="msg-body">{{ message.message }}</div>
-                <p class="sender">
-                    Me
-                    • <a href="{% url 'edit_message' message.id %}" style="color:yellow;">Edit</a>
-                    • <a href="{% url 'delete_message' message.id %}" style="color:red;">Delete</a>
-                </p>
+{% for message in messages %}
+    {% if message.sender == request.user %}
+        <div class="single-message sent">
+            <div class="msg-body">
+                {% if message.message %}{{ message.message }}<br>{% endif %}
+                {% if message.img %}
+                    <img src="{{ message.img.url }}" alt="Image"
+                         style="max-width:200px; border-radius:8px; margin-top:5px;">
+                {% endif %}
             </div>
-            {% else %}
-            <div class="single-message">
-                <div class="msg-body">{{ message.message }}</div>
-                <p class="sender">{{ message.sender }}</p>
+            <p class="sender">
+                Me
+                • <a href="{% url 'edit_message' message.id %}" style="color:yellow;">Edit</a>
+                • <a href="{% url 'delete_message' message.id %}" style="color:red;">Delete</a>
+            </p>
+        </div>
+    {% else %}
+        <div class="single-message">
+            <div class="msg-body">
+                {% if message.message %}{{ message.message }}<br>{% endif %}
+                {% if message.img %}
+                    <img src="{{ message.img.url }}" alt="Image"
+                         style="max-width:200px; border-radius:8px; margin-top:5px;">
+                {% endif %}
             </div>
-            {% endif %}
-            {% empty %}
-            <p>No messages yet.</p>
-            {% endfor %}
+            <p class="sender">{{ message.sender }}</p>
+        </div>
+    {% endif %}
+{% empty %}
+    <p>No messages yet.</p>
+{% endfor %}
+
         </div>
 
         <form action="{% url 'room' room_name=room_name username=request.user.username %}"
-      id="msg-form" method="post" class="msg-form">
-    {% csrf_token %}
-    <textarea name="message" id="message" placeholder="Type your message..." required></textarea>
-    <button type="submit">
-        <i class="fa-solid fa-paper-plane"></i>
-    </button>
-</form>
-
+              id="msg-form" method="post" class="msg-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="img" class="label-btn"><i class="fa-solid fa-paperclip"></i></label>
+            <input type="file" name="img" id="img" accept="image/*">
+            <textarea name="message" id="message" placeholder="Type your message..."></textarea>
+            <button type="submit">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
 
 
     </div>
@@ -770,18 +803,25 @@
     scrollToBottom();
 
     messageForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-        const message = messageInput.value.trim();
-        if (message) {
-            socket.send(JSON.stringify({
-                message: message,
-                room_name: "{{room_name}}",
-                sender: "{{user}}"
-            }));
-            messageInput.value = "";
-            messageInput.style.height = 'auto';
-        }
-    });
+    const file = document.getElementById("img").files[0];
+    const message = messageInput.value.trim();
+
+    if (file) {
+        return;
+    }
+
+    e.preventDefault();
+    if (message) {
+        socket.send(JSON.stringify({
+            message: message,
+            room_name: "{{room_name}}",
+            sender: "{{user}}"
+        }));
+        messageInput.value = "";
+        messageInput.style.height = 'auto';
+    }
+});
+
 
     messageInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -802,6 +842,14 @@
         `);
 
         scrollToBottom();
+    });
+    document.getElementById("img").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const preview = document.getElementById("preview");
+            preview.src = URL.createObjectURL(file);  // ✅ local preview
+            preview.style.display = "block";
+        }
     });
 </script>
 </html>

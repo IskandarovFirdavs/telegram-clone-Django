@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Room, Message, UserModel
+from .models import Room, Message, UserModel, Notification
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -24,25 +24,46 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def send_message(self, event):
         data = event["message"]
-        await self.create_message(data=data)
+        msg = await self.create_message(data=data)
 
-        response = {"sender": data["sender"], "message": data["message"]}
-
+        response = {
+            "sender": data["sender"],
+            "message": msg.message,
+            "img": msg.img.url if msg.img else None,
+        }
         await self.send(text_data=json.dumps({"message": response}))
 
     @database_sync_to_async
     def create_message(self, data):
         get_room = Room.objects.get(room_name=data["room_name"])
+        sender_user = UserModel.objects.get(username=data['sender'])
 
-        try:
-            sender_user = UserModel.objects.get(username=data['sender'])
-        except UserModel.DoesNotExist:
-            return
+        new_message = Message.objects.create(
+            room=get_room,
+            sender=sender_user,
+            message=data.get("message", ""),
+            img=data.get("img")
+        )
+        return new_message
 
 
-        if not Message.objects.filter(
-                message=data["message"], sender=sender_user
-        ).exists():
-            new_message = Message.objects.create(
-                room=get_room, message=data["message"], sender=sender_user
+    @database_sync_to_async
+    def create_message(self, data):
+        get_room = Room.objects.get(room_name=data["room_name"])
+        sender_user = UserModel.objects.get(username=data['sender'])
+
+        new_message = Message.objects.create(
+            room=get_room,
+            sender=sender_user,
+            message=data.get("message", ""),
+            img=data.get("img")
+        )
+
+        for member in get_room.members.exclude(id=sender_user.id):
+            Notification.objects.create(
+                owner=member,
+                message=new_message,
+                is_read=False
             )
+
+        return new_message

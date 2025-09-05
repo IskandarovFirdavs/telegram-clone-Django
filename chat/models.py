@@ -28,10 +28,32 @@ class Room(models.Model):
 
 class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='messages')
-    message = models.CharField(max_length=255)
+    message = models.CharField(max_length=255, null=True, blank=True)
     sender = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    img = models.ImageField(upload_to='chat/', null=True, blank=True)
+    img = models.ImageField(upload_to='chat', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.sender} -> {self.room.room_name}'
+        return f'{self.sender} -> {self.room}'
+
+
+class ReplyMessage(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='reply')
+    owner = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='reply')
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='reply')
+    reply_message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.owner} -> {self.reply_message}'
+
+
+
+class Notification(models.Model):
+    owner = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='notifications_owner')
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='noti')
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
