@@ -4,7 +4,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from chat.forms import RegistrationForm, LoginForm
-from chat.models import Room, Message, UserModel, Notification
+from chat.models import Room, Message, UserModel, Notification, ReplyMessage
 from chat.templatetags.my_tags import ProductFilter
 from django.http import HttpResponseForbidden
 
@@ -92,10 +92,8 @@ def another_user_profile_view(request, username):
     if q:
         users = users.filter(username__icontains=q)
 
-    # Generate the same room_name for both users (order-independent)
     room_name = f"private_{'_'.join(sorted([request.user.username, user.username]))}"
 
-    # Try to get existing room
     room = Room.objects.filter(room_name=room_name, chat_type='private').first()
 
     # If not found → create it
@@ -239,3 +237,19 @@ def delete_message(request, message_id):
     return render(request, "confirm_delete.html", {"message": message})
 
 
+@login_required
+def reply_message(request, parent_message_id):
+    if request.method == "POST":
+        parent_message = get_object_or_404(Message, id=parent_message_id)
+        reply_text =request.POST.get('reply')
+        if reply_text:
+            ReplyMessage.objects.create(
+                owner =request.user,
+                message=parent_message,
+                reply_comment=reply_text
+            )
+
+        next_url =request.POST.get('next', 'home')
+        return redirect(next_url)
+
+    return redirect(request.path)

@@ -8,18 +8,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = f"room_{self.scope['url_route']['kwargs']['room_name']}"
         await self.channel_layer.group_add(self.room_name, self.channel_name)
-
         await self.accept()
 
     async def disconnect(self, code):
         await self.channel_layer.group_discard(self.room_name, self.channel_name)
-        self.close(code)
+        await self.close(code)
 
     async def receive(self, text_data):
         data_json = json.loads(text_data)
-
         event = {"type": "send_message", "message": data_json}
-
         await self.channel_layer.group_send(self.room_name, event)
 
     async def send_message(self, event):
@@ -44,18 +41,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
             message=data.get("message", ""),
             img=data.get("img")
         )
-        return new_message
+
+        for member in get_room.members.exclude(id=sender_user.id):
+            Notification.objects.create(
+                owner=member,
+                message=new_message,
+                is_read=False
+            )
+
+        return (new_message
 
 
-    @database_sync_to_async
-    def create_message(self, data):
+    @database_sync_to_async)
+    def create_reply_message(self, data):
         get_room = Room.objects.get(room_name=data["room_name"])
-        sender_user = UserModel.objects.get(username=data['sender'])
+        sender_user = UserModel.objects.get(username=data['owner'])
 
         new_message = Message.objects.create(
             room=get_room,
             sender=sender_user,
-            message=data.get("message", ""),
+            parent_message_id = message,
+            reply_message=data.get("message", ""),
             img=data.get("img")
         )
 
